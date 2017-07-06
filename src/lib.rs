@@ -1,47 +1,3 @@
-//! Hyper SSL support via OpenSSL.
-//!
-//! # Usage
-//!
-//! On the client side:
-//!
-//! ```
-//! extern crate hyper;
-//! extern crate hyper_openssl;
-//!
-//! use hyper::Client;
-//! use hyper::net::HttpsConnector;
-//! use hyper_openssl::OpensslClient;
-//! use std::io::Read;
-//!
-//! fn main() {
-//!     let ssl = OpensslClient::new().unwrap();
-//!     let connector = HttpsConnector::new(ssl);
-//!     let client = Client::with_connector(connector);
-//!
-//!     let mut resp = client.get("https://google.com").send().unwrap();
-//!     let mut body = vec![];
-//!     resp.read_to_end(&mut body).unwrap();
-//!     println!("{}", String::from_utf8_lossy(&body));
-//! }
-//! ```
-//!
-//! Or on the server side:
-//!
-//! ```no_run
-//! extern crate hyper;
-//! extern crate hyper_openssl;
-//!
-//! use hyper::Server;
-//! use hyper_openssl::OpensslServer;
-//!
-//! fn main() {
-//!     let ssl = OpensslServer::from_files("private_key.pem", "certificate_chain.pem").unwrap();
-//!     let server = Server::https("0.0.0.0:8443", ssl).unwrap();
-//! }
-//! ```
-#![warn(missing_docs)]
-#![doc(html_root_url="https://docs.rs/hyper-openssl/0.2.6")]
-
 extern crate antidote;
 extern crate hyper;
 pub extern crate openssl;
@@ -59,7 +15,7 @@ use std::net::SocketAddr;
 use std::ops::{Deref, DerefMut};
 use std::path::Path;
 use std::sync::Arc;
-use std::time::{Duration,Instant};
+use std::time::{Duration, Instant};
 
 #[derive(PartialEq, Eq, Hash)]
 struct SessionKey {
@@ -109,8 +65,10 @@ impl<T> SslClient<T> for OpensslClient
     type Stream = SslStream<T>;
 
     fn wrap_client(&self, mut stream: T, host: &str) -> hyper::Result<SslStream<T>> {
-        println!("Inside wrap Client now. We will put timings here");
-        let mut conf = try!(self.connector.configure().map_err(|e| hyper::Error::Ssl(Box::new(e))));
+
+        let mut conf = try!(self.connector
+                                .configure()
+                                .map_err(|e| hyper::Error::Ssl(Box::new(e))));
         let key = SessionKey {
             host: host.to_owned(),
             port: try!(stream.peer_addr()).port(),
@@ -118,8 +76,8 @@ impl<T> SslClient<T> for OpensslClient
         if let Some(session) = self.session_cache.lock().get(&key) {
             unsafe {
                 try!(conf.ssl_mut()
-                    .set_session(session)
-                    .map_err(|e| hyper::Error::Ssl(Box::new(e))));
+                         .set_session(session)
+                         .map_err(|e| hyper::Error::Ssl(Box::new(e))));
             }
         }
 
@@ -130,7 +88,7 @@ impl<T> SslClient<T> for OpensslClient
             conf.connect(host, stream)
         };
         let dur = stream_wc.elapsed();
-        println!("stream connect in wrap client {} ns",  dur.subsec_nanos());
+        print!("{} \t", dur.subsec_nanos());
 
         match stream {
             Ok(stream) => {
@@ -168,7 +126,8 @@ impl OpensslServer {
               Q: AsRef<Path>
     {
         let mut ssl = try!(SslAcceptorBuilder::mozilla_intermediate_raw(SslMethod::tls()));
-        try!(ssl.builder_mut().set_private_key_file(key, X509_FILETYPE_PEM));
+        try!(ssl.builder_mut()
+                 .set_private_key_file(key, X509_FILETYPE_PEM));
         try!(ssl.builder_mut().set_certificate_chain_file(certs));
         try!(ssl.builder_mut().check_private_key());
         Ok(OpensslServer(ssl.build()))
@@ -289,19 +248,23 @@ mod test {
         let ssl = OpensslServer::from_files("test/key.pem", "test/cert.pem").unwrap();
         let server = Server::https("127.0.0.1:0", ssl).unwrap();
 
-        let listening =
-            server.handle(|_: Request, resp: Response<Fresh>| resp.send(b"hello").unwrap())
-                .unwrap();
+        let listening = server
+            .handle(|_: Request, resp: Response<Fresh>| resp.send(b"hello").unwrap())
+            .unwrap();
         let port = listening.socket.port();
         mem::forget(listening);
 
         let mut connector = SslConnectorBuilder::new(SslMethod::tls()).unwrap();
-        connector.builder_mut().set_ca_file("test/cert.pem").unwrap();
+        connector
+            .builder_mut()
+            .set_ca_file("test/cert.pem")
+            .unwrap();
         let ssl = OpensslClient::from(connector.build());
         let connector = HttpsConnector::new(ssl);
         let client = Client::with_connector(connector);
 
-        let mut resp = client.get(&format!("https://localhost:{}", port))
+        let mut resp = client
+            .get(&format!("https://localhost:{}", port))
             .send()
             .unwrap();
         let mut body = vec![];
@@ -309,7 +272,8 @@ mod test {
         assert_eq!(body, b"hello");
         drop(resp);
 
-        let mut resp = client.get(&format!("https://localhost:{}", port))
+        let mut resp = client
+            .get(&format!("https://localhost:{}", port))
             .send()
             .unwrap();
         let mut body = vec![];
