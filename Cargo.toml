@@ -13,4 +13,4 @@ exclude = ["test/*"]
 antidote = "1.0"
 hyper = "0.10"
 time = "0.1.17"
-openssl = {path ="/Users/sgujral/Desktop/parallel_cert/hyper-openssl/rust-openssl/openssl", version="0.9.10"}
+openssl = {path ="/Users/sgujral/Desktop/parallel_cert/rust-openssl/openssl", version="0.9.10"}

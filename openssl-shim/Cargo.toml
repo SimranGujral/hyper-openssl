@@ -6,7 +6,7 @@ authors = ["SimranGujral <gujralsimran19@gmail.com>"]
 [dependencies]
 webpki = "0.12"
 env_logger = "0.4.2"
-openssl = {path ="/Users/sgujral/Desktop/parallel_cert/hyper-openssl/rust-openssl/openssl", version= "0.9.10"}
+openssl = {path ="/Users/sgujral/Desktop/parallel_cert/rust-openssl/openssl", version= "0.9.10"}
 pem = "0.3"
 hyper = "0.10"
 hyper-openssl = { path ="/Users/sgujral/Desktop/parallel_cert/hyper-openssl", version= "0.2.6" }

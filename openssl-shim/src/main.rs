@@ -6,8 +6,6 @@ extern crate time;
 extern crate lazy_static;
 
 
-pub mod hosts;
-use hosts::replace_host;
 use std::env;
 use std::net::SocketAddr;
 use std::io::{Write, Read};
