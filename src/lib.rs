@@ -187,9 +187,9 @@ impl<T> SslServer<T> for OpensslServer
         }
     }
 }
-
+/// An `SslServer` implementation using OpenSSL.
 #[derive(Debug)]
-struct InnerStream<T: Read + Write>(ssl::SslStream<T>);
+pub struct InnerStream<T: Read + Write>(pub ssl::SslStream<T>);
 
 impl<T: Read + Write> Drop for InnerStream<T> {
     fn drop(&mut self) {
@@ -199,7 +199,7 @@ impl<T: Read + Write> Drop for InnerStream<T> {
 
 /// A Hyper SSL stream.
 #[derive(Debug, Clone)]
-pub struct SslStream<T: Read + Write>(Arc<Mutex<InnerStream<T>>>);
+pub struct SslStream<T: Read + Write>(pub Arc<Mutex<InnerStream<T>>>);
 
 /// A guard around a locked inner SSL stream.
 pub struct StreamGuard<'a, T: Read + Write + 'a>(MutexGuard<'a, InnerStream<T>>);
