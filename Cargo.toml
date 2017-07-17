@@ -12,5 +12,18 @@ exclude = ["test/*"]
 [dependencies]
 antidote = "1.0"
 hyper = "0.10"
-time = "0.1.17"
-openssl = {path ="/Users/sgujral/Desktop/parallel_cert/rust-openssl/openssl", version="0.9.10"}
+openssl = { path ="/Users/sgujral/Desktop/parallel_cert/rust-openssl/openssl", version="0.9.10" }
+tokio-core = "0.1.8"
+tokio-io = "0.1.2"
+tokio-service = "0.1.0"
+futures = "0.1.14"
+rustls = { path= "/Users/sgujral/Desktop/parallel_cert/rustls" }
+untrusted = "0.5"
+time = "0.1.37"
+base64 = "0.5"
+log = { version = "0.3.6", optional = true }
+webpki = "0.12"
+
+[[example]]
+name = "bench"
+path = "examples/bench.rs"
