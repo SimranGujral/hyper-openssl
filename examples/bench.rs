@@ -265,8 +265,6 @@ fn exec_rustlsclient(config: rustls::ClientConfig, site: &str) -> f64{
 
 	let cert_check = Instant::now();
     let mut client = rustls::ClientSession::new(&Arc::new(config), site);
-    let cert_check_timings = duration_nanos(Instant::now().duration_since(cert_check));
-    
     let httpreq = format!("GET / HTTP/1.1\r\nHost: {}\r\nConnection: \
 	                           close\r\nAccept-Encoding: identity\r\n\r\n",
                           site);
@@ -302,6 +300,7 @@ fn exec_rustlsclient(config: rustls::ClientConfig, site: &str) -> f64{
         //tls.read_to_end(&mut plaintext).unwrap(); // fails because of connection being aborted
         //stdout().write_all(&plaintext).unwrap();
     }
+    let cert_check_timings = duration_nanos(Instant::now().duration_since(cert_check));
     cert_check_timings
 }
 
@@ -380,13 +379,11 @@ fn run(trials: i32, sites: &str, exp: &Experiment) -> Vec<f64> {
 
         println!("{}", site);
 
-        //let mut site_time: Vec<f64> = vec![];
         let mut config_time:Vec<f64> = vec![];
         let mut cert_time: Vec<f64> = vec![];
         let mut total_time: Vec<f64> = vec![];
 
         for _ in 0..trials {
-            //site_time.push(website_bench(&site, &exp));
             let mut site_time: Vec<f64> = website_bench(&site, &exp);
             config_time.push(site_time[0]);
             cert_time.push(site_time[1]);
