@@ -54,10 +54,10 @@ enum Experiment {
 ///		Ciphers supported by the Client. This list conforms with the ciphers supported
 ///		Servo.
 ///		The basic logic here is to prefer ciphers with ECDSA certificates, Forward
-/// 	Secrecy, AES GCM ciphers, AES ciphers, and finally 3DES ciphers.
-/// 	A complete discussion of the issues involved in TLS configuration can be found here:
-/// 	https://wiki.mozilla.org/Security/Server_Side_TLS
-/// 	This configuration is using the ciphers used by Servo
+///		Secrecy, AES GCM ciphers, AES ciphers, and finally 3DES ciphers.
+///		A complete discussion of the issues involved in TLS configuration can be found here:
+///		https://wiki.mozilla.org/Security/Server_Side_TLS
+///		This configuration is using the ciphers used by Servo
 
 const DEFAULT_CIPHERS: &'static str =
     concat!("ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:",
@@ -74,18 +74,18 @@ const DEFAULT_CIPHERS: &'static str =
 //	creating a custom OpenSslClient
 
 /// Struct :	HttpsConnector
-///				This takes the custom client
-///		 		config and gives an HTTPconnector.
-///		   		We use this connector to call our
-///		   		custom wrap_client which can be used
-///		   		to point to the cert verif funcn to
-///		   		be tested. It implements the
-///				functionality of the NetworkConnector
-///				defined for "OpenSSLClient" and calls
-///				wrap_client(OpenSSLClient) which
-///				is directed to the cert verfn
-///				funcn defined for the
-///				OpenSslConnector.
+///	This takes the custom client
+///	config and gives an HTTPconnector.
+/// We use this connector to call our
+///	custom wrap_client which can be used
+///	to point to the cert verif funcn to
+///	be tested. It implements the
+///	functionality of the NetworkConnector
+///	defined for "OpenSSLClient" and calls
+///	wrap_client(OpenSSLClient) which
+///	is directed to the cert verfn
+///	funcn defined for the
+///	OpenSslConnector.
 #[derive(Clone)]
 pub struct HttpsConnector {
     ssl: OpenSslClient,
