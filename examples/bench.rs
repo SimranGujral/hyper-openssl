@@ -74,18 +74,18 @@ const DEFAULT_CIPHERS: &'static str =
 //	creating a custom OpenSslClient
 
 /// Struct :	HttpsConnector
-///	This takes the custom client
-///	config and gives an HTTPconnector.
-/// We use this connector to call our
-///	custom wrap_client which can be used
-///	to point to the cert verif funcn to
-///	be tested. It implements the
-///	functionality of the NetworkConnector
-///	defined for "OpenSSLClient" and calls
-///	wrap_client(OpenSSLClient) which
-///	is directed to the cert verfn
-///	funcn defined for the
-///	OpenSslConnector.
+///				This takes the custom client
+///				config and gives an HTTPconnector.
+/// 			We use this connector to call our
+///				custom wrap_client which can be used
+///				to point to the cert verif funcn to
+///				be tested. It implements the
+///				functionality of the NetworkConnector
+///				defined for "OpenSSLClient" and calls
+///				wrap_client(OpenSSLClient) which
+///				is directed to the cert verfn
+///				funcn defined for the
+///				OpenSslConnector.
 #[derive(Clone)]
 pub struct HttpsConnector {
     ssl: OpenSslClient,
