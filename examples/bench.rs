@@ -209,10 +209,14 @@ fn create_opensslclient() -> OpenSslClient {
 ///				of ZeroRead Errors, WantRead(Error),
 ///				WantWrite(Error), WantX509Lookup,
 ///				Stream(Error), Ssl(ErrorStack)
-fn exec_opensslclient(connector: Connector, site: &str) {
+fn exec_opensslclient(connector: Connector, site: &str) -> f64  {
     let port = 443;
     let scheme = "https";
+
+    let cert_check = Instant::now();
     let mut stream = connector.connect(&site, port, scheme).unwrap();
+    let cert_check_timings = duration_nanos(Instant::now().duration_since(cert_check));
+
     let httpreq = format!("GET / HTTP/1.1\r\nHost: {}\r\nConnection: \
                            	   close\r\nAccept-Encoding: identity\r\n\r\n",
                           site);
@@ -220,6 +224,7 @@ fn exec_opensslclient(connector: Connector, site: &str) {
 
     let mut res = vec![];
     stream.read_to_end(&mut res);
+    cert_check_timings
     // to avoid printing site content this
     // has been commented
     // println!("{}", String::from_utf8_lossy(&res));
@@ -256,18 +261,27 @@ fn create_rustls_config() -> rustls::ClientConfig {
 ///				This requests for content for the client.
 ///				This can be the source of TLS errors defined here
 ///				https://docs.rs/rustls/0.9.0/rustls/enum.TLSError.html
-fn exec_rustlsclient(config: rustls::ClientConfig, site: &str) {
+fn exec_rustlsclient(config: rustls::ClientConfig, site: &str) -> f64{
+
+	let cert_check = Instant::now();
     let mut client = rustls::ClientSession::new(&Arc::new(config), site);
+    let cert_check_timings = duration_nanos(Instant::now().duration_since(cert_check));
+    
     let httpreq = format!("GET / HTTP/1.1\r\nHost: {}\r\nConnection: \
 	                           close\r\nAccept-Encoding: identity\r\n\r\n",
                           site);
+    
     client.write(httpreq.as_bytes()).unwrap();
+    
     let port = 443;
     let addr = lookup_ipv4(site, port);
+    
     let mut sock = TcpStream::connect(addr).unwrap();
+    
     loop {
         let (rl, wl) = client.complete_io(&mut sock).unwrap();
         if rl == 0 && wl == 0 {
+        	//cert_check_timings
             break;
         }
         let mut plaintext = [0u8; 128];
@@ -275,9 +289,9 @@ fn exec_rustlsclient(config: rustls::ClientConfig, site: &str) {
         for b in plaintext.iter_mut() {
             *b ^= 0xff;
         }
-
+        //cert_check_timings
         // FIXME
-        // this writes garbage.. but has been individually tested with
+        // this writes garbage. but has been individually tested with
         // read_to_end and fetches all websites
         //stdout().write_all(&plaintext[..len]).unwrap();
         //println!("{}", String::from_utf8_lossy(&plaintext));
@@ -288,6 +302,7 @@ fn exec_rustlsclient(config: rustls::ClientConfig, site: &str) {
         //tls.read_to_end(&mut plaintext).unwrap(); // fails because of connection being aborted
         //stdout().write_all(&plaintext).unwrap();
     }
+    cert_check_timings
 }
 
 // General functions for rustls and OpenSSLClient after this
@@ -316,20 +331,37 @@ fn duration_nanos(d: Duration) -> f64 {
 ///				We create connector configurations
 ///				and clients and get content from the
 ///				websites requested for by the clients.
-fn website_bench(site: &str, exp: &Experiment) -> f64 {
-    let start = Instant::now();
+fn website_bench(site: &str, exp: &Experiment) -> Vec<f64> {
+    let mut client_times: Vec<f64> = vec![]; 
+	
+	let start = Instant::now();
     match *exp {
         Experiment::OpenSSL => {
+        	
+        	let client_creation = Instant::now();
             let client = create_opensslclient();
+            let client_creation_time = duration_nanos(Instant::now().duration_since(client_creation));
+            client_times.push(client_creation_time);
+
             let connector = make_https_connector(client);
-            exec_opensslclient(connector, site);
+
+            let cert_verfn_time = exec_opensslclient(connector, site);
+            client_times.push(cert_verfn_time);
         }
         Experiment::Rustls => {
+        	let client_creation = Instant::now();
             let config = create_rustls_config();
-            exec_rustlsclient(config, site);
+            let client_creation_time = duration_nanos(Instant::now().duration_since(client_creation));
+            client_times.push(client_creation_time);
+
+            let cert_verfn_times = exec_rustlsclient(config, site);
+            client_times.push(cert_verfn_times);
         }
     };
-    duration_nanos(Instant::now().duration_since(start))
+    let total_time = duration_nanos(Instant::now().duration_since(start));
+    client_times.push(total_time);
+
+    client_times
 }
 
 /// Funcn :		run
@@ -339,6 +371,8 @@ fn website_bench(site: &str, exp: &Experiment) -> f64 {
 ///				taken under different conditions
 fn run(trials: i32, sites: &str, exp: &Experiment) -> Vec<f64> {
     let mut times: Vec<f64> = vec![];
+    let mut avg_config_times: Vec<f64> = vec![];
+    let mut avg_cert_times: Vec<f64> =vec![];
     for line in sites.lines() {
         let l: Vec<String> = line.split(',').map(|s| s.to_string()).collect();
         let mut site = "".to_owned();
@@ -346,13 +380,39 @@ fn run(trials: i32, sites: &str, exp: &Experiment) -> Vec<f64> {
 
         println!("{}", site);
 
-        let mut site_time: Vec<f64> = vec![];
+        //let mut site_time: Vec<f64> = vec![];
+        let mut config_time:Vec<f64> = vec![];
+        let mut cert_time: Vec<f64> = vec![];
+        let mut total_time: Vec<f64> = vec![];
+
         for _ in 0..trials {
-            site_time.push(website_bench(&site, &exp));
+            //site_time.push(website_bench(&site, &exp));
+            let mut site_time: Vec<f64> = website_bench(&site, &exp);
+            config_time.push(site_time[0]);
+            cert_time.push(site_time[1]);
+            total_time.push(site_time[2]);
+
         }
-        let avg = site_time.iter().fold(0.0, |a, &b| a + b) / (site_time.len() as f64);
-        times.push(avg);
+        let avg_config = config_time.iter().fold(0.0, |a, &b| a + b) / (config_time.len() as f64);
+        let avg_cert = cert_time.iter().fold(0.0, |a, &b| a + b) / (cert_time.len() as f64);
+        let avg_total = total_time.iter().fold(0.0, |a, &b| a + b) / (total_time.len() as f64);
+
+        avg_config_times.push(avg_config);
+        avg_cert_times.push(avg_cert);
+
+        times.push(avg_total);
     }
+    println!("Configuration Times");
+    for t in &avg_config_times {
+        println!("{}", t);
+    }
+
+    println!("Cert Verification Times");
+    for t in &avg_cert_times{
+        println!("{}", t);
+    }
+
+    println!("Total Configuration Time");
     times
 }
 
@@ -368,11 +428,13 @@ fn main() {
     let mut sites = String::new();
     file.read_to_string(&mut sites).unwrap();
 
-    for t in run(1, &sites, &Experiment::Rustls) {
+    println!("OpenSSL Measurements");
+    for t in run(1, &sites, &Experiment::OpenSSL) {
         println!("{}", t);
     }
 
-    for t in run(1, &sites, &Experiment::OpenSSL) {
+    println!("Rustls Measurements");
+    for t in run(1, &sites, &Experiment::Rustls) {
         println!("{}", t);
     }
 }
