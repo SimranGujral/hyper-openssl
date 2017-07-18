@@ -116,7 +116,7 @@ impl NetworkConnector for HttpsConnector {
     }
 }
 
-///Struct :		OpenSslConnector
+/// Struct :	OpenSslConnector
 ///				The purpose of our OpenSSLConnector is to customize the
 ///				set_verify_callback funcn. Currently, this is being
 ///				pointed to the Rust-OpenSSL cert verfn funcn.
@@ -147,12 +147,11 @@ impl OpenSslConnector {
     }
 }
 
-///Struct :		OpenSslClient
+/// Struct :	OpenSslClient
 ///				This is our version of the OpenSSLClient.
-///				This is used to implement the functionality
-///				of the NetworkConnector and its wrap_client
+///				This is used to implement the wrap_client
 ///				function. It consumes the OpenSslConnector
-///				and uses this to call wrap_client, which
+///				and uses this to wrap_client, which
 ///				is directed to the cert verfn funcn in
 ///				OpenSslConnector.
 #[derive(Clone)]
@@ -173,7 +172,7 @@ impl SslClient for OpenSslClient {
 
 // Funcns for OpenSSLClient defined after this.
 
-///Funcn :		create_opensslclient
+/// Funcn :		create_opensslclient
 ///				create_client is used to create a custom
 ///		    	client configuration. The important things
 ///				here are the certs being added to the root.
@@ -204,7 +203,7 @@ fn create_opensslclient() -> OpenSslClient {
 
 }
 
-///Funcn :		exec_opensslclient
+/// Funcn :		exec_opensslclient
 ///				This uses the HttpsConnector to perform r/w
 ///				as requested by the client. This is the source
 ///				of ZeroRead Errors, WantRead(Error),
@@ -237,7 +236,7 @@ fn make_https_connector(ssl_client: OpenSslClient) -> Connector {
 
 // Functions for Rustls after this
 
-///Funcns :		create_rustls_config
+/// Funcns :	create_rustls_config
 ///				Creates a custom Rustls client by setting
 ///				159 certs in the root. Other configurations
 ///				can also be set, for eg: persistance, mtu,
@@ -253,7 +252,7 @@ fn create_rustls_config() -> rustls::ClientConfig {
     config
 }
 
-///Funcn :		exec_rustlsclient
+/// Funcn :		exec_rustlsclient
 ///				This requests for content for the client.
 ///				This can be the source of TLS errors defined here
 ///				https://docs.rs/rustls/0.9.0/rustls/enum.TLSError.html
@@ -293,9 +292,9 @@ fn exec_rustlsclient(config: rustls::ClientConfig, site: &str) {
 
 // General functions for rustls and OpenSSLClient after this
 
-///Funcn :  lookup_ipv4
-///			This returns the ip addresses of websites
-///		  	the client wants to connect to.
+/// Funcn : 	lookup_ipv4
+///				This returns the ip addresses of websites
+///		  		the client wants to connect to.
 fn lookup_ipv4(host: &str, port: u16) -> SocketAddr {
     use std::net::ToSocketAddrs;
     let addrs = (host, port).to_socket_addrs().unwrap();
@@ -313,10 +312,10 @@ fn duration_nanos(d: Duration) -> f64 {
     (d.as_secs() as f64) + (d.subsec_nanos() as f64) / 1e9
 }
 
-///Funcn:	This is the test bed for clients.
-///			We create connector configurations
-///			and clients and get content from the
-///			websites requested for by the clients.
+/// Funcn:		This is the test bed for clients.
+///				We create connector configurations
+///				and clients and get content from the
+///				websites requested for by the clients.
 fn website_bench(site: &str, exp: &Experiment) -> f64 {
     let start = Instant::now();
     match *exp {
@@ -333,11 +332,11 @@ fn website_bench(site: &str, exp: &Experiment) -> f64 {
     duration_nanos(Instant::now().duration_since(start))
 }
 
-///Funcn :	run
-///			This records the time for client creation
-///			and connection to sites and averages it over 'n'
-///			runs to give the closest estimate of the time
-///			taken under different conditions
+/// Funcn :		run
+///				This records the time for client creation
+///				and connection to sites and averages it over 'n'
+///				runs to give the closest estimate of the time
+///				taken under different conditions
 fn run(trials: i32, sites: &str, exp: &Experiment) -> Vec<f64> {
     let mut times: Vec<f64> = vec![];
     for line in sites.lines() {
@@ -357,9 +356,9 @@ fn run(trials: i32, sites: &str, exp: &Experiment) -> Vec<f64> {
     times
 }
 
-///Funcn :	main
-///			Reads sites from sites.txt, creates client and
-///			connects to them.
+/// Funcn :		main
+///				Reads sites from sites.txt, creates client and
+///				connects to them.
 fn main() {
 
     let mut file = match File::open(Path::new("sites.txt")) {
