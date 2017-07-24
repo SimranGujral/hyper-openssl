@@ -22,7 +22,12 @@ time = "0.1.37"
 base64 = "0.5"
 log = { version = "0.3.6", optional = true }
 rustls ="0.9"
+hyper-rustls = {git = "https://github.com/SimranGujral/hyper-rustls.git", branch = "servo_config", version="0.6.1"}
 
 [[example]]
 name = "bench"
 path = "examples/bench.rs"
+
+[[example]]
+name = "alexa_bench"
+path =  "examples/alexa_bench.rs"

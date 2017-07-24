@@ -426,12 +426,12 @@ fn main() {
     file.read_to_string(&mut sites).unwrap();
 
     println!("OpenSSL Measurements");
-    for t in run(1, &sites, &Experiment::OpenSSL) {
+    for t in run(10, &sites, &Experiment::OpenSSL) {
         println!("{}", t);
     }
 
     println!("Rustls Measurements");
-    for t in run(1, &sites, &Experiment::Rustls) {
+    for t in run(10, &sites, &Experiment::Rustls) {
         println!("{}", t);
     }
 }
